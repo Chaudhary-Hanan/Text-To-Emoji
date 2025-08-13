@@ -1,5 +1,115 @@
 [
   {
+    "timestamp": "2025-08-13T18:09:53.356Z",
+    "action": "decrypt",
+    "inputText": "😑🤪😄😟😪😅😶🤤😏🤯😷😶😆😜😇😲😎😏🙄😑😁🤤🤕😝😒😫😇🤑😧😫😝🤔🤗😓😨🤣😪🥱🙄🤕😌😘😎😄😥😊😑🤢😶😏",
+    "outputText": "hi hello kya hal ...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T18:09:42.700Z",
+    "action": "encrypt",
+    "inputText": "hi hello kya hal ",
+    "outputText": "😑🤪😄😟😪😅😶🤤😏🤯😷😶😆😜😇😲😎😏🙄😑😁🤤🤕😝😒...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "mixed",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:50:11.114Z",
+    "action": "decrypt",
+    "inputText": "😑🤪😄😟😪😅😶🤤😏🤯😷😋🤕😃😄😍😇😌😐😟😉😍😏😶😱😆🤑😵🥱🥳😱😣😰🤣🤓😫😁🥱🙃😏🤠🙃😀🤒😯🤤😳😅😴😉",
+    "outputText": "नमस्ते...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:50:01.424Z",
+    "action": "encrypt",
+    "inputText": "नमस्ते",
+    "outputText": "😑🤪😄😟😪😅😶🤤😏🤯😷😋🤕😃😄😍😇😌😐😟😉😍😏😶😱...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:37:02.044Z",
+    "action": "decrypt",
+    "inputText": "😑🤪😄😟😪😅😶🤤😏🤯😷🤢😅😥🤒🤕🤑😎😀🤒🤑😋😏🥱😍😨😘🙃😥😕🤪🤔🤤😦😒😜😑😕🤤😰😪😥😂😜😟😐😟😔😑🤗",
+    "outputText": "main thek hoon ap sunao...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:36:50.071Z",
+    "action": "encrypt",
+    "inputText": "main thek hoon ap sunao",
+    "outputText": "😑🤪😄😟😪😅😶🤤😏🤯😷🤢😅😥🤒🤕🤑😎😀🤒🤑😋😏🥱😍...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "roman_urdu",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:36:08.320Z",
+    "action": "decrypt",
+    "inputText": "😑🤪😄😟😪😅😶🤤😏🤯🤢🥺😳🤐😴🤣😜🙃😧😧😌🥰🙂🥱🙂😎🙃😮🤯😅🥰😦🤕😕🤗🤒😐😲😃😃😴🥰😓🤪😉😜😊🙄🤓🥺",
+    "outputText": "Hi dear How are you...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:35:57.537Z",
+    "action": "encrypt",
+    "inputText": "Hi dear How are you",
+    "outputText": "😑🤪😄😟😪😅😶🤤😏🤯🤢🥺😳🤐😴🤣😜🙃😧😧😌🥰🙂🥱🙂...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "mixed",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:34:31.261Z",
+    "action": "decrypt",
+    "inputText": "😑🤪😄😟😪😅😶🤤😏🤯🤢😒🤗🥺🥱😫😎😉😥🤪😉😋😃🤑😉🤠🥺😇🤑😍🥰😕🤤😝😒🤤🤕😁😧😳😌🤣😵🤮",
+    "outputText": "hi...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "timestamp": "2025-08-13T17:34:18.595Z",
+    "action": "encrypt",
+    "inputText": "hi",
+    "outputText": "😑🤪😄😟😪😅😶🤤😏🤯🤢😒🤗🥺🥱😫😎😉😥🤪😉😋😃🤑😉...",
+    "passwordUsed": true,
+    "success": true,
+    "language": "english",
+    "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
+    "ip": "::1"
+  },
+  {
     "timestamp": "2025-08-13T16:08:54.903Z",
     "action": "decrypt",
     "inputText": "😑🤪😄😟😪😅😶🤤😏🤯🤢😌😅🤒😇😆😴🤢🤪😆🤔😇😎🤪😰😉😂🙂😁😇🤒😂😒🤤😜😲🙃🤕😳😪😮🤠😟😝😮😂😓🤪🙂😍",

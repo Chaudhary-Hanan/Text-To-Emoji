@@ -119,6 +119,12 @@
     background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
     border: 1px solid rgba(79, 70, 229, 0.2);
   }
+
+  .badge-glass {
+    @apply px-3 py-1 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-medium text-white/90 border border-white/20 shadow-lg backdrop-blur-xl;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
 }
 
 @keyframes float {
@@ -142,9 +148,10 @@
 .arrow-rotate {
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   animation: arrowGlow 3s ease-in-out infinite;
+	position: relative;
 }
 
 .arrow-rotate:hover {
-  transform: scale(1.1);
-  animation: arrowGlow 1s ease-in-out infinite;
+	transform: scale(1.1);
+	animation: arrowGlow 1s ease-in-out infinite;
 }

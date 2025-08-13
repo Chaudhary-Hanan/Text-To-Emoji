@@ -234,28 +234,28 @@ export default function Home() {
         <div className="text-center mb-12 animate-fade-in">
           <div className="flex items-center justify-center mb-4 relative">
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse mr-3" />
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent flex items-center gap-4">
+            <h1 className="text-5xl md:text-7xl leading-[1.2] font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent flex items-center gap-4 overflow-visible pb-1">
               <span>Text</span>
               <div className={`arrow-rotate ${
                 activeTab === 'encrypt' ? 'rotate-0' : 'rotate-180'
               }`}>
                 <ArrowRight className="w-12 h-12 md:w-16 md:h-16 text-blue-400" />
               </div>
-              <span>Emojis</span>
+              <span className="inline-block pb-1">Emojis</span>
             </h1>
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse ml-3" />
 
             {/* Floating trust badge */}
-            <div className="absolute -top-4 right-4 md:right-8">
-              <div className="px-3 py-1 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg ring-1 ring-white/20 backdrop-blur-sm animate-fade-in floating-animation glow-effect">
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+              <div className="badge-glass bg-gradient-to-r from-indigo-500/30 to-purple-500/30 animate-fade-in floating-animation">
                 End-to-end encryption
               </div>
             </div>
           </div>
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             {activeTab === 'encrypt' 
-              ? 'Encrypt your secret messages (English/Roman Urdu) into emojis with password protection. Share them safely and decrypt when needed.'
-              : 'Decrypt your emoji messages back to original text (English/Roman Urdu) using your secret password.'
+              ? 'Encrypt your secret messages into emojis with password protection. Share them safely and decrypt when needed.'
+              : 'Decrypt your emoji messages back to original text using your secret password.'
             }
           </p>
         </div>
@@ -291,14 +291,14 @@ export default function Home() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? '1. Type a message (English/Roman Urdu)' : '1. Paste encrypted emojis'}
+                  {activeTab === 'encrypt' ? '1. Type a message to encrypt' : '1. Paste encrypted emojis'}
                 </label>
                 <textarea
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder={
                     activeTab === 'encrypt' 
-                      ? 'Enter your secret message here... (English, Roman Urdu, or Urdu) - supports up to 1000 characters'
+                      ? 'Enter your secret message here...'
                       : 'Paste your encrypted emojis here...'
                   }
                   className="input-field h-40 md:h-32"
@@ -308,7 +308,7 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  2. Set a password
+                  {activeTab === 'encrypt' ? '2. Set a password' : '2. Secret Password'}
                 </label>
                 <input
                   type="password"
