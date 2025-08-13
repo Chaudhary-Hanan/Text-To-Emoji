@@ -17,57 +17,115 @@ This guide will help you set up Google Apps Script to log user activities to Goo
 1. Go to [Google Apps Script](https://script.google.com)
 2. Click "New Project"
 3. Name it "Text-to-Emojis Logger"
-4. Replace the default code with this:
+4. Replace the default code with this (includes doGet with logs export for admin dashboard):
 
 ```javascript
+const SHEET_NAME = 'Sheet1';
+const ADMIN_KEY = '0502'; // optional: change and keep in sync with your site env
+
 function doPost(e) {
   try {
-    // Parse the incoming data
     const data = JSON.parse(e.postData.contents);
-    
-    // Get the active spreadsheet
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = spreadsheet.getActiveSheet();
-    
-    // Prepare the row data
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    if (!sheet) throw new Error('Sheet not found');
+
     const rowData = [
-      new Date(), // Timestamp
-      data.action, // Action (encrypt/decrypt)
-      data.inputText, // Input text (truncated)
-      data.outputText, // Output text (truncated)
-      data.passwordUsed ? 'Yes' : 'No', // Password used
-      data.success ? 'Yes' : 'No', // Success
-      data.language, // Language detected
-      data.inputLength, // Input length
-      data.outputLength // Output length
+      new Date(),
+      data.action,
+      data.inputText,
+      data.outputText,
+      data.passwordUsed ? 'Yes' : 'No',
+      data.success ? 'Yes' : 'No',
+      data.language,
+      data.inputLength,
+      data.outputLength
     ];
-    
-    // Append the data to the sheet
+
     sheet.appendRow(rowData);
-    
-    // Return success response
+
     return ContentService
-      .createTextOutput(JSON.stringify({ success: true, message: 'Data logged successfully' }))
+      .createTextOutput(JSON.stringify({ success: true }))
       .setMimeType(ContentService.MimeType.JSON);
-      
   } catch (error) {
-    // Return error response
     return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: false, 
-        error: error.toString() 
-      }))
+      .createTextOutput(JSON.stringify({ success: false, error: String(error) }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ 
-      success: true, 
-      message: 'Text-to-Emojis Logger is running' 
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    const mode = (e && e.parameter && e.parameter.mode) || 'ping';
+    if (mode === 'ping') {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, message: 'Text-to-Emojis Logger is running' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (mode === 'logs') {
+      const key = (e && e.parameter && e.parameter.key) || '';
+      if (key !== ADMIN_KEY) {
+        return ContentService
+          .createTextOutput(JSON.stringify({ error: 'Unauthorized' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const limit = parseInt((e && e.parameter && e.parameter.limit) || '100', 10);
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+      if (!sheet) throw new Error('Sheet not found');
+
+      const lastRow = sheet.getLastRow();
+      const header = sheet.getRange(1, 1, 1, 9).getValues()[0];
+      const rowsToRead = Math.min(limit, Math.max(0, lastRow - 1));
+      const range = sheet.getRange(Math.max(2, lastRow - rowsToRead + 1), 1, rowsToRead, 9);
+      const values = rowsToRead > 0 ? range.getValues() : [];
+
+      const logs = values.reverse().map(r => ({
+        timestamp: r[0],
+        action: String(r[1]).toLowerCase(),
+        inputText: r[2],
+        outputText: r[3],
+        passwordUsed: String(r[4]).toLowerCase() === 'yes',
+        success: String(r[5]).toLowerCase() === 'yes',
+        language: String(r[6]).toLowerCase().replace(' ', '_'),
+        inputLength: Number(r[7]) || 0,
+        outputLength: Number(r[8]) || 0
+      }));
+
+      // Basic stats
+      const totalOperations = logs.length;
+      const successfulOperations = logs.filter(l => l.success).length;
+      const encryptOperations = logs.filter(l => l.action === 'encrypt').length;
+      const decryptOperations = logs.filter(l => l.action === 'decrypt').length;
+      const languageStats = {
+        romanUrdu: logs.filter(l => l.language === 'roman urdu' || l.language === 'roman_urdu').length,
+        english: logs.filter(l => l.language === 'english').length,
+        mixed: logs.filter(l => l.language === 'mixed').length
+      };
+
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          logs,
+          stats: {
+            totalOperations,
+            successfulOperations,
+            successRate: totalOperations > 0 ? (successfulOperations / totalOperations) * 100 : 0,
+            encryptOperations,
+            decryptOperations,
+            languageStats
+          }
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: 'Unknown mode' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: String(error) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 ```
 
@@ -84,11 +142,12 @@ function doGet(e) {
 
 ## Step 4: Update Your Environment Variables
 
-1. Open your `.env.local` file
+1. Open your `.env.local` file (or Netlify Site settings → Environment)
 2. Replace `your_google_apps_script_web_app_url_here` with the actual URL you copied
 3. The line should look like:
    ```
    NEXT_PUBLIC_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
+   ADMIN_KEY=0502
    ```
 
 ## Step 5: Test the Integration
@@ -161,6 +220,6 @@ Once you've completed this setup:
 1. Your app will automatically log all encryption/decryption attempts
 2. You can view the data in your Google Sheet
 3. You can export the data or create charts/analytics in Google Sheets
-4. The admin dashboard will continue to work with local logs
+4. The admin dashboard will pull logs from your Google Sheet via Apps Script when deployed (Netlify)
 
 The Apps Script integration will work alongside the existing local logging system, providing you with both immediate access to data (admin dashboard) and long-term storage (Google Sheets).

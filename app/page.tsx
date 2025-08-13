@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { Copy, Lock, Unlock, Heart, Sparkles, ArrowRight, Shield, Activity, BarChart3, Download, X } from 'lucide-react';
 import { encryptToEmojis, decryptFromEmojis, validateEmojiInput } from '@/lib/encryption';
 import { activityLogger } from '@/lib/logger';
-import { appsScriptLogger } from '@/lib/apps-script-logger';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'encrypt' | 'decrypt'>('encrypt');
@@ -37,17 +36,39 @@ export default function Home() {
     setAdminLoading(true);
     try {
       console.log('Fetching admin data...');
-      const response = await fetch('/api/logs', {
+
+      // Try Apps Script-backed logs first (works on Netlify)
+      const appsScriptResp = await fetch('/api/admin-logs?limit=100', {
         headers: {
           'Authorization': 'Bearer 0502'
-        }
+        },
+        cache: 'no-store'
       });
-      
-      console.log('Response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Admin data received:', data);
+
+      if (appsScriptResp.ok) {
+        const data = await appsScriptResp.json();
+        setAdminLogs(data.logs || []);
+        setAdminStats(data.stats || {
+          totalOperations: 0,
+          successfulOperations: 0,
+          successRate: 0,
+          encryptOperations: 0,
+          decryptOperations: 0,
+          languageStats: { romanUrdu: 0, english: 0, mixed: 0 }
+        } as any);
+        return;
+      }
+
+      // Fallback to local file-based logs (works in local dev)
+      const fallbackResp = await fetch('/api/logs', {
+        headers: {
+          'Authorization': 'Bearer 0502'
+        },
+        cache: 'no-store'
+      });
+
+      if (fallbackResp.ok) {
+        const data = await fallbackResp.json();
         setAdminLogs(data.logs || []);
         setAdminStats(data.stats || {
           totalOperations: 0,
@@ -58,10 +79,6 @@ export default function Home() {
           languageStats: { romanUrdu: 0, english: 0, mixed: 0 }
         } as any);
       } else {
-        console.error('Failed to fetch admin data. Status:', response.status);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        // Set default stats even if API fails
         setAdminStats({
           totalOperations: 0,
           successfulOperations: 0,
@@ -114,26 +131,14 @@ export default function Home() {
       const encrypted = encryptToEmojis(inputText, password);
       setResult(encrypted);
       
-      // Log the activity (backend only)
+      // Log the activity (backend will also forward to Google Sheets)
       activityLogger.logActivity('encrypt', inputText, encrypted, !!password, true);
-      
-             // Log to Google Sheets via Apps Script if configured
-       if (appsScriptLogger && appsScriptLogger.isConfigured()) {
-         const logEntry = appsScriptLogger.createLogEntry('encrypt', inputText, encrypted, !!password, true);
-         appsScriptLogger.logActivity(logEntry);
-       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Encryption failed.';
       setError(errorMessage);
       
-             // Log failed attempt
-       activityLogger.logActivity('encrypt', inputText, '', !!password, false);
-       
-       // Log failed attempt to Google Sheets via Apps Script if configured
-       if (appsScriptLogger && appsScriptLogger.isConfigured()) {
-         const logEntry = appsScriptLogger.createLogEntry('encrypt', inputText, '', !!password, false);
-         appsScriptLogger.logActivity(logEntry);
-       }
+      // Log failed attempt (backend will also forward to Google Sheets)
+      activityLogger.logActivity('encrypt', inputText, '', !!password, false);
     } finally {
       setIsLoading(false);
     }
@@ -172,26 +177,14 @@ export default function Home() {
       const decrypted = decryptFromEmojis(inputText, password);
       setResult(decrypted);
       
-      // Log the activity (backend only)
+      // Log the activity (backend will also forward to Google Sheets)
       activityLogger.logActivity('decrypt', inputText, decrypted, !!password, true);
-      
-             // Log to Google Sheets via Apps Script if configured
-       if (appsScriptLogger && appsScriptLogger.isConfigured()) {
-         const logEntry = appsScriptLogger.createLogEntry('decrypt', inputText, decrypted, !!password, true);
-         appsScriptLogger.logActivity(logEntry);
-       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Decryption failed.';
       setError(errorMessage);
       
-             // Log failed attempt
-       activityLogger.logActivity('decrypt', inputText, '', !!password, false);
-       
-       // Log failed attempt to Google Sheets via Apps Script if configured
-       if (appsScriptLogger && appsScriptLogger.isConfigured()) {
-         const logEntry = appsScriptLogger.createLogEntry('decrypt', inputText, '', !!password, false);
-         appsScriptLogger.logActivity(logEntry);
-       }
+      // Log failed attempt (backend will also forward to Google Sheets)
+      activityLogger.logActivity('decrypt', inputText, '', !!password, false);
     } finally {
       setIsLoading(false);
     }

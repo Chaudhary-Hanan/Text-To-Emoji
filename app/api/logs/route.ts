@@ -104,7 +104,38 @@ export async function POST(request: NextRequest) {
       logs.splice(1000);
     }
 
+    // Try to persist locally (works in dev; not persistent on Netlify)
     await writeLogs(logs);
+
+    // Also forward to Google Apps Script (source of truth when deployed)
+    const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
+    if (APPS_SCRIPT_URL) {
+      const normalizedLanguage =
+        logEntry.language === 'roman_urdu' ? 'Roman Urdu' :
+        logEntry.language === 'mixed' ? 'Mixed' : 'English';
+
+      const payload = {
+        action,
+        inputText: inputText.substring(0, 100),
+        outputText: success ? outputText.substring(0, 100) : '',
+        passwordUsed: !!passwordUsed,
+        success: !!success,
+        language: normalizedLanguage,
+        inputLength: inputText.length,
+        outputLength: (outputText || '').length
+      };
+
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          cache: 'no-store'
+        });
+      } catch (err) {
+        console.warn('Apps Script forward failed:', err);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
