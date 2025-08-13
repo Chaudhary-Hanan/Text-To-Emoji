@@ -232,7 +232,7 @@ export default function Home() {
       <div className="relative z-10 container mx-auto px-4 py-20">
         {/* Header */}
         <div className="text-center mb-12 animate-fade-in">
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center mb-4 relative">
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse mr-3" />
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent flex items-center gap-4">
               <span>Text</span>
@@ -244,6 +244,13 @@ export default function Home() {
               <span>Emojis</span>
             </h1>
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse ml-3" />
+
+            {/* Floating trust badge */}
+            <div className="absolute -top-4 right-4 md:right-8">
+              <div className="px-3 py-1 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg ring-1 ring-white/20 backdrop-blur-sm animate-fade-in floating-animation glow-effect">
+                End-to-end encryption
+              </div>
+            </div>
           </div>
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             {activeTab === 'encrypt' 
@@ -255,17 +262,17 @@ export default function Home() {
 
         {/* Main Card */}
         <div className="max-w-4xl mx-auto">
-          <div className="glass-effect rounded-3xl p-8 md:p-12 shadow-2xl animate-slide-up">
+            <div className="glass-effect rounded-3xl p-6 md:p-8 lg:p-12 shadow-2xl animate-slide-up">
             {/* Tab Navigation */}
-            <div className="flex justify-center mb-8">
-              <div className="flex bg-gray-800/50 p-2 rounded-xl border border-gray-700">
+            <div className="flex justify-center mb-6 md:mb-8">
+              <div className="flex bg-gray-800/50 p-1.5 md:p-2 rounded-xl border border-gray-700">
                 <button
                   onClick={() => switchTab('encrypt')}
                   className={`tab-button flex items-center gap-2 ${
                     activeTab === 'encrypt' ? 'tab-active' : 'tab-inactive'
                   }`}
                 >
-                  <Lock className="w-4 h-4" />
+                  <Lock className="w-4 h-4 shrink-0" />
                   Encrypt Text
                 </button>
                 <button
@@ -274,7 +281,7 @@ export default function Home() {
                     activeTab === 'decrypt' ? 'tab-active' : 'tab-inactive'
                   }`}
                 >
-                  <Unlock className="w-4 h-4" />
+                  <Unlock className="w-4 h-4 shrink-0" />
                   Decrypt Emojis
                 </button>
               </div>
@@ -294,7 +301,7 @@ export default function Home() {
                       ? 'Enter your secret message here... (English, Roman Urdu, or Urdu) - supports up to 1000 characters'
                       : 'Paste your encrypted emojis here...'
                   }
-                  className="input-field h-32"
+                  className="input-field h-40 md:h-32"
                   disabled={isLoading}
                 />
               </div>
@@ -320,16 +327,16 @@ export default function Home() {
                 <button
                   onClick={activeTab === 'encrypt' ? handleEncrypt : handleDecrypt}
                   disabled={isLoading}
-                  className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base py-3 md:py-4"
                 >
                   {isLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                   <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       {activeTab === 'encrypt' ? 'Encrypting...' : 'Decrypting...'}
                     </>
                   ) : (
                     <>
-                      {activeTab === 'encrypt' ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                      {activeTab === 'encrypt' ? <Lock className="w-4 h-4 md:w-5 md:h-5" /> : <Unlock className="w-4 h-4 md:w-5 md:h-5" />}
                       {activeTab === 'encrypt' ? 'Encrypt Text' : 'Decrypt Text'}
                     </>
                   )}
@@ -353,17 +360,17 @@ export default function Home() {
                     </label>
                     <button
                       onClick={handleCopy}
-                      className={`btn-secondary text-sm flex items-center gap-2 transition-all transform hover:scale-105 ${
+                      className={`btn-secondary text-xs md:text-sm flex items-center gap-2 transition-all transform hover:scale-105 ${
                         copySuccess ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-600 hover:to-green-500 glow-effect' : ''
                       }`}
                     >
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3 h-3 md:w-4 md:h-4" />
                       {copySuccess ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                   
-                  <div className={`result-container min-h-[120px] max-h-[200px] overflow-y-auto ${activeTab === 'encrypt' ? 'emoji-display' : ''}`}>
-                    <div className={`text-white break-all ${activeTab === 'encrypt' ? 'text-2xl leading-relaxed' : 'text-lg'}`}>
+                  <div className={`result-container min-h-[140px] md:min-h-[120px] max-h-[240px] md:max-h-[200px] overflow-y-auto ${activeTab === 'encrypt' ? 'emoji-display' : ''}`}>
+                    <div className={`text-white break-all ${activeTab === 'encrypt' ? 'text-2xl md:text-2xl leading-relaxed' : 'text-base md:text-lg'}`}>
                       {result}
                     </div>
                   </div>

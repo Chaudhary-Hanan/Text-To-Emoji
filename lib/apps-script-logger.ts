@@ -86,7 +86,9 @@ export class AppsScriptLogger {
 
 // Configuration
 export const APPS_SCRIPT_CONFIG = {
-  WEB_APP_URL: process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || ''
+  WEB_APP_URL:
+    process.env.NEXT_PUBLIC_APPS_SCRIPT_URL ||
+    'https://script.google.com/macros/s/AKfycbwGK6LLGkTUq1jCKHl5O7faZbdvGV0w5H19srok7wUxCMn0fW1gWBWgj-bygvZzMe0p/exec'
 };
 
 console.log('Apps Script environment variables loaded:', {

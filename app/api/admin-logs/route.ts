@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGK6LLGkTUq1jCKHl5O7faZbdvGV0w5H19srok7wUxCMn0fW1gWBWgj-bygvZzMe0p/exec';
+const rawUrl = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL;
+const APPS_SCRIPT_URL = rawUrl.startsWith('@') ? rawUrl.slice(1) : rawUrl;
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,6 +35,22 @@ export async function GET(request: NextRequest) {
       data = JSON.parse(text);
     } catch (err) {
       return NextResponse.json({ error: 'Invalid response from Apps Script', raw: text }, { status: 502 });
+    }
+
+    // Normalize minimal responses
+    if (!data.logs && !data.stats) {
+      data = {
+        logs: [],
+        stats: {
+          totalOperations: 0,
+          successfulOperations: 0,
+          successRate: 0,
+          encryptOperations: 0,
+          decryptOperations: 0,
+          languageStats: { romanUrdu: 0, english: 0, mixed: 0 }
+        },
+        info: data
+      };
     }
 
     return NextResponse.json(data);

@@ -108,7 +108,9 @@ export async function POST(request: NextRequest) {
     await writeLogs(logs);
 
     // Also forward to Google Apps Script (source of truth when deployed)
-    const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
+    const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGK6LLGkTUq1jCKHl5O7faZbdvGV0w5H19srok7wUxCMn0fW1gWBWgj-bygvZzMe0p/exec';
+    const rawUrl = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL;
+    const APPS_SCRIPT_URL = rawUrl.startsWith('@') ? rawUrl.slice(1) : rawUrl;
     if (APPS_SCRIPT_URL) {
       const normalizedLanguage =
         logEntry.language === 'roman_urdu' ? 'Roman Urdu' :
