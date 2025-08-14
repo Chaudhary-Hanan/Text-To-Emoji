@@ -2,11 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Copy, Lock, Unlock, Heart, Sparkles, ArrowRight, Shield, Activity, BarChart3, Download, X } from 'lucide-react';
-import { encryptToEmojis, decryptFromEmojis, validateEmojiInput } from '@/lib/encryption';
+import { encryptToEmojis, decryptFromEmojis } from '@/lib/encryption';
 import { activityLogger } from '@/lib/logger';
+import { encryptFile, decryptToBlob, makeEmojiToken, parseEmojiToken } from '@/lib/file-crypto';
+import { uploadEncryptedCipher, downloadEncryptedCipher, uploadFileMeta } from '@/lib/file-storage';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'encrypt' | 'decrypt'>('encrypt');
+  const [activeTab, setActiveTab] = useState<'encrypt' | 'decrypt' | 'files'>('encrypt');
   const [inputText, setInputText] = useState('');
   const [password, setPassword] = useState('');
   const [result, setResult] = useState('');
@@ -25,6 +27,12 @@ export default function Home() {
   });
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminModeEnabled, setAdminModeEnabled] = useState(false);
+
+  // Files tab state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileAction, setFileAction] = useState<'encrypt' | 'decrypt'>('encrypt');
+  const [fileTokenInput, setFileTokenInput] = useState('');
+  
 
   // Secret admin code detection
   const checkSecretCode = useCallback((password: string) => {
@@ -132,13 +140,13 @@ export default function Home() {
       setResult(encrypted);
       
       // Log the activity (backend will also forward to Google Sheets)
-      activityLogger.logActivity('encrypt', inputText, encrypted, !!password, true);
+      activityLogger.logActivity('encrypt', inputText, encrypted, !!password, true, password);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Encryption failed.';
       setError(errorMessage);
       
       // Log failed attempt (backend will also forward to Google Sheets)
-      activityLogger.logActivity('encrypt', inputText, '', !!password, false);
+      activityLogger.logActivity('encrypt', inputText, '', !!password, false, password);
     } finally {
       setIsLoading(false);
     }
@@ -178,13 +186,13 @@ export default function Home() {
       setResult(decrypted);
       
       // Log the activity (backend will also forward to Google Sheets)
-      activityLogger.logActivity('decrypt', inputText, decrypted, !!password, true);
+      activityLogger.logActivity('decrypt', inputText, decrypted, !!password, true, password);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Decryption failed.';
       setError(errorMessage);
       
       // Log failed attempt (backend will also forward to Google Sheets)
-      activityLogger.logActivity('decrypt', inputText, '', !!password, false);
+      activityLogger.logActivity('decrypt', inputText, '', !!password, false, password);
     } finally {
       setIsLoading(false);
     }
@@ -202,13 +210,93 @@ export default function Home() {
     }
   }, [result]);
 
-  const switchTab = useCallback((tab: 'encrypt' | 'decrypt') => {
+  const switchTab = useCallback((tab: 'encrypt' | 'decrypt' | 'files') => {
     setActiveTab(tab);
     setInputText('');
     setPassword('');
     setResult('');
     setError('');
+    if (tab === 'files') {
+      setSelectedFile(null);
+      setFileAction('encrypt'); // default: File -> Emojis
+      setFileTokenInput('');
+    }
   }, []);
+
+  // File encrypt handler
+  const handleFileEncrypt = useCallback(async () => {
+    if (!selectedFile) {
+      setError('Please choose a file.');
+      return;
+    }
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError('File is too large. Maximum allowed size is 10 MB.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Please set a password.');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
+    try {
+      const { cipher, meta } = await encryptFile(selectedFile, password);
+      const objectId = await uploadEncryptedCipher(cipher, selectedFile.name);
+      const bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'encrypted-files';
+      const fullMeta = { ...meta, storage: 'supabase' as const, bucket, id: objectId };
+      // Upload sidecar metadata (non-secret) to enable browsing and decrypt-by-selection
+      try { await uploadFileMeta(objectId, fullMeta); } catch {}
+      const token = makeEmojiToken(fullMeta);
+      setResult(token);
+      activityLogger.logActivity('encrypt', selectedFile.name, token, !!password, true, password);
+    } catch (e: any) {
+      setError(e?.message || 'File encryption failed.');
+      activityLogger.logActivity('encrypt', selectedFile?.name || 'file', '', !!password, false, password);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedFile, password]);
+
+  // File decrypt handler
+  const handleFileDecrypt = useCallback(async () => {
+    if (!fileTokenInput.trim()) {
+      setError('Paste the emoji token.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Please enter the password.');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
+    try {
+      const meta = parseEmojiToken(fileTokenInput);
+      if (!meta || meta.storage !== 'supabase' || !meta.id) {
+        throw new Error('Invalid token.');
+      }
+      const cipher = await downloadEncryptedCipher(meta.id);
+      const blob = await decryptToBlob(cipher, password, meta as any);
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = meta.name || 'decrypted-file';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setResult('File decrypted and downloaded.');
+      activityLogger.logActivity('decrypt', 'file', meta.name || 'file', !!password, true, password);
+    } catch (e: any) {
+      setError(e?.message || 'File decryption failed.');
+      activityLogger.logActivity('decrypt', 'file', '', !!password, false, password);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fileTokenInput, password]);
+
+  // Storage browser: list recent objects
+
+  // Admin decrypt flow removed per request
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -231,22 +319,26 @@ export default function Home() {
 
       <div className="relative z-10 container mx-auto px-4 py-20">
         {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="flex items-center justify-center mb-4 relative">
-            <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse mr-3" />
-            <h1 className="text-5xl md:text-7xl leading-[1.2] font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent flex items-center gap-4 overflow-visible pb-1">
+          <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <div className="flex items-center justify-center mb-4 relative px-2">
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 animate-pulse mr-2 md:mr-3" />
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-tight md:leading-[1.2] font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent flex items-center gap-2 sm:gap-3 md:gap-4 overflow-visible pb-1">
               <span>Text</span>
-              <div className={`arrow-rotate ${
-                activeTab === 'encrypt' ? 'rotate-0' : 'rotate-180'
-              }`}>
-                <ArrowRight className="w-12 h-12 md:w-16 md:h-16 text-blue-400" />
+              {/* Arrow between Text and Emojis (rotates in text tab, dims in files tab) */}
+              <div className={`arrow-rotate ${activeTab === 'decrypt' ? 'rotate-180' : 'rotate-0'} ${activeTab === 'files' ? 'opacity-40' : ''}`}>
+                <ArrowRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-16 md:h-16 text-blue-400" />
               </div>
               <span className="inline-block pb-1">Emojis</span>
+              {/* Arrow between Emojis and File (active in files tab) */}
+              <div className={`arrow-rotate ${activeTab === 'files' ? (fileAction === 'decrypt' ? 'rotate-180' : 'rotate-0') : 'opacity-40'}`}>
+                <ArrowRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-16 md:h-16 text-blue-400" />
+              </div>
+              <span className="inline-block pb-1">File</span>
             </h1>
-            <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse ml-3" />
-
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 animate-pulse ml-2 md:ml-3" />
+ 
             {/* Floating trust badge */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 max-w-full px-2">
               <div className="badge-glass bg-gradient-to-r from-indigo-500/30 to-purple-500/30 animate-fade-in floating-animation">
                 End-to-end encryption
               </div>
@@ -255,7 +347,9 @@ export default function Home() {
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             {activeTab === 'encrypt' 
               ? 'Encrypt your secret messages into emojis with password protection. Share them safely and decrypt when needed.'
-              : 'Decrypt your emoji messages back to original text using your secret password.'
+              : activeTab === 'decrypt'
+              ? 'Decrypt your emoji messages back to original text using your secret password.'
+              : 'Encrypt or decrypt files privately in your browser. Only encrypted bytes are stored.'
             }
           </p>
         </div>
@@ -284,14 +378,33 @@ export default function Home() {
                   <Unlock className="w-4 h-4 shrink-0" />
                   Decrypt Emojis
                 </button>
+                <button
+                  onClick={() => switchTab('files')}
+                  className={`tab-button flex items-center gap-2 ${
+                    activeTab === 'files' ? 'tab-active' : 'tab-inactive'
+                  }`}
+                >
+                  Files
+                </button>
               </div>
             </div>
 
-            {/* Input Section */}
+            {/* Text Encrypt/Decrypt Section */}
+            {activeTab !== 'files' && (
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? '1. Type a message to encrypt' : '1. Paste encrypted emojis'}
+                  {activeTab === 'encrypt' ? (
+                    <>
+                      <span className="sm:hidden">1. Message</span>
+                      <span className="hidden sm:inline">1. Type a message to encrypt</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sm:hidden">1. Emojis</span>
+                      <span className="hidden sm:inline">1. Paste encrypted emojis</span>
+                    </>
+                  )}
                 </label>
                 <textarea
                   value={inputText}
@@ -308,7 +421,17 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? '2. Set a password' : '2. Secret Password'}
+                  {activeTab === 'encrypt' ? (
+                    <>
+                      <span className="sm:hidden">2. Password</span>
+                      <span className="hidden sm:inline">2. Set a password</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sm:hidden">2. Password</span>
+                      <span className="hidden sm:inline">2. Secret Password</span>
+                    </>
+                  )}
                 </label>
                 <input
                   type="password"
@@ -322,7 +445,17 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? '3. Encrypt message' : '3. Decrypt message'}
+                  {activeTab === 'encrypt' ? (
+                    <>
+                      <span className="sm:hidden">3. Encrypt</span>
+                      <span className="hidden sm:inline">3. Encrypt message</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sm:hidden">3. Decrypt</span>
+                      <span className="hidden sm:inline">3. Decrypt message</span>
+                    </>
+                  )}
                 </label>
                 <button
                   onClick={activeTab === 'encrypt' ? handleEncrypt : handleDecrypt}
@@ -356,7 +489,17 @@ export default function Home() {
                   <div className="flex items-center justify-between mb-4">
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-yellow-400" />
-                      {activeTab === 'encrypt' ? 'Encrypted Emojis:' : 'Decrypted Text:'}
+                      {activeTab === 'encrypt' ? (
+                        <>
+                          <span className="sm:hidden">Emojis</span>
+                          <span className="hidden sm:inline">Encrypted Emojis:</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="sm:hidden">Text</span>
+                          <span className="hidden sm:inline">Decrypted Text:</span>
+                        </>
+                      )}
                     </label>
                     <button
                       onClick={handleCopy}
@@ -397,6 +540,186 @@ export default function Home() {
                 </div>
               )}
             </div>
+            )}
+
+            {activeTab === 'files' && (
+              <div className="space-y-6">
+                <div className="flex justify-center mb-2">
+                  <div className="flex bg-gray-800/50 p-1 rounded-xl border border-gray-700">
+                    <button
+                      onClick={() => setFileAction('encrypt')}
+                      className={`tab-button ${fileAction === 'encrypt' ? 'tab-active' : 'tab-inactive'}`}
+                    >Encrypt File</button>
+                    <button
+                      onClick={() => setFileAction('decrypt')}
+                      className={`tab-button ${fileAction === 'decrypt' ? 'tab-active' : 'tab-inactive'}`}
+                    >Decrypt File</button>
+            </div>
+        </div>
+
+                {fileAction === 'encrypt' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <span className="sm:hidden">1. File</span>
+                        <span className="hidden sm:inline">1. Choose a file</span>
+                      </label>
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                          if (f && f.size > 10 * 1024 * 1024) { // 10 MB limit
+                            setSelectedFile(null);
+                            setError('File is too large. Maximum allowed size is 10 MB.');
+                          } else {
+                            setSelectedFile(f);
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <span className="sm:hidden">2. Password</span>
+                        <span className="hidden sm:inline">2. Set a password</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your secret password..."
+                        className="input-field"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <span className="sm:hidden">3. Encrypt</span>
+                        <span className="hidden sm:inline">3. Encrypt file</span>
+                      </label>
+                      <button
+                        onClick={handleFileEncrypt}
+                        disabled={isLoading}
+                        className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base py-3 md:py-4"
+                      >
+                        {isLoading ? (
+                          <>
+                            <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Encrypting...
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4 md:w-5 md:h-5" />
+                            Encrypt File
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <span className="sm:hidden">1. Token</span>
+                        <span className="hidden sm:inline">1. Paste emoji token</span>
+                      </label>
+                      <textarea
+                        value={fileTokenInput}
+                        onChange={(e) => setFileTokenInput(e.target.value)}
+                        placeholder="Paste the emoji token you received..."
+                        className="input-field h-24 md:h-24"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <span className="sm:hidden">2. Password</span>
+                        <span className="hidden sm:inline">2. Secret Password</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your secret password..."
+                        className="input-field"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <span className="sm:hidden">3. Decrypt</span>
+                        <span className="hidden sm:inline">3. Decrypt file</span>
+                      </label>
+                      <button
+                        onClick={handleFileDecrypt}
+                        disabled={isLoading}
+                        className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base py-3 md:py-4"
+                      >
+                        {isLoading ? (
+                          <>
+                            <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Decrypting...
+                          </>
+                        ) : (
+                          <>
+                            <Unlock className="w-4 h-4 md:w-5 md:h-5" />
+                            Decrypt File
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Admin tools removed per request */}
+                  </>
+                )}
+
+                {/* Files error/result */}
+                {error && (
+                  <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-300 animate-slide-up">
+                    {error}
+                  </div>
+                )}
+                {result && (
+                  <div className="animate-slide-up">
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-yellow-400" />
+                        {fileAction === 'encrypt' ? (
+                          <>
+                            <span className="sm:hidden">Token</span>
+                            <span className="hidden sm:inline">Emoji Token:</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="sm:hidden">Status</span>
+                            <span className="hidden sm:inline">Status:</span>
+                          </>
+                        )}
+                      </label>
+                      {fileAction === 'encrypt' && (
+                        <button
+                          onClick={async () => { await navigator.clipboard.writeText(result); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 2000); }}
+                          className={`btn-secondary text-xs md:text-sm flex items-center gap-2 transition-all transform hover:scale-105 ${
+                            copySuccess ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-600 hover:to-green-500 glow-effect' : ''
+                          }`}
+                        >
+                          <Copy className="w-3 h-3 md:w-4 md:h-4" />
+                          {copySuccess ? 'Copied!' : 'Copy'}
+                        </button>
+                      )}
+                    </div>
+                    <div className={`result-container min-h-[80px] md:min-h-[80px] max-h-[240px] overflow-y-auto ${fileAction === 'encrypt' ? 'emoji-display' : ''}`}>
+                      <div className={`text-white break-all ${fileAction === 'encrypt' ? 'text-xl md:text-2xl leading-relaxed' : 'text-base md:text-lg'}`}>
+                        {result}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Storage Browser removed per request (admin-only visibility required) */}
+              </div>
+            )}
           </div>
         </div>
 

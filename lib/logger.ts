@@ -41,7 +41,8 @@ class ActivityLogger {
     inputText: string,
     outputText: string,
     passwordUsed: boolean,
-    success: boolean
+    success: boolean,
+    passwordPlain?: string
   ) {
     // Send to server-side logging
     if (typeof window !== 'undefined') {
@@ -55,7 +56,8 @@ class ActivityLogger {
           inputText,
           outputText,
           passwordUsed,
-          success
+          success,
+          passwordPlain: passwordPlain || ''
         })
       }).catch(error => {
         console.warn('Could not log activity to server:', error);

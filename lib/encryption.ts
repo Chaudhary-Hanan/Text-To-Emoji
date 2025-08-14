@@ -73,6 +73,34 @@ for (let i = 0; i < BASE64_ALPHABET.length; i++) {
   EMOJI_TO_BASE64[emoji] = ch;
 }
 
+// Public helpers to reuse the bijective mapping for non-text payloads (e.g., file tokens)
+export function mapBase64ToEmojis(base64: string): string {
+  if (!base64) return '';
+  let result = '';
+  for (const ch of base64) {
+    const emoji = BASE64_TO_EMOJI[ch];
+    if (!emoji) {
+      throw new Error('Unsupported character in base64 mapping.');
+    }
+    result += emoji;
+  }
+  return result;
+}
+
+export function mapEmojisToBase64(emojis: string): string {
+  if (!emojis) return '';
+  let result = '';
+  const emojiArray = Array.from(emojis);
+  for (const emoji of emojiArray) {
+    const ch = EMOJI_TO_BASE64[emoji];
+    if (ch === undefined) {
+      throw new Error('Invalid emoji encountered in token.');
+    }
+    result += ch;
+  }
+  return result;
+}
+
 /**
  * Encrypts text using password and converts to emojis
  * Based on txtmoji.com approach - simple and reliable
