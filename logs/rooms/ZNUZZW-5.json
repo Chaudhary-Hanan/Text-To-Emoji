@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "code": "ZNUZZW-5",
+    "maxMembers": 5,
+    "createdAt": "2025-08-20T12:21:01.403Z",
+    "expiresAt": "2025-08-20T13:21:01.403Z"
+  },
+  "messages": [
+    {
+      "id": "087e4ca4-9bd7-4aca-84be-f3e629b5ca07",
+      "senderId": "a3ea32a6-5dfb-4d18-a38c-4cea5fc936ea",
+      "senderName": "Anon_A3E",
+      "senderColor": "#06b6d4",
+      "text": "hi",
+      "at": 1755692471774
+    },
+    {
+      "id": "7a233c25-9cd3-433a-b54f-f0eff4bf3f7c",
+      "senderId": "7fcf0fc9-fce0-432e-8b32-16fc5d85b705",
+      "senderName": "Anon_7FC",
+      "senderColor": "#a855f7",
+      "text": "hi",
+      "at": 1755692485918
+    },
+    {
+      "id": "26fd4d9f-83ed-437b-879e-b8699c7f450b",
+      "senderId": "a3ea32a6-5dfb-4d18-a38c-4cea5fc936ea",
+      "senderName": "Anon_A3E",
+      "senderColor": "#06b6d4",
+      "text": "i m hanan",
+      "at": 1755692492129
+    },
+    {
+      "id": "b554a81c-2519-4158-8e07-ec70e6dfcd0c",
+      "senderId": "7fcf0fc9-fce0-432e-8b32-16fc5d85b705",
+      "senderName": "Anon_7FC",
+      "senderColor": "#a855f7",
+      "text": "ok",
+      "at": 1755692497116
+    }
+  ]
+}
