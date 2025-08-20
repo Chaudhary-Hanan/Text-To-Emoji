@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "code": "YZU6SE-2",
+    "maxMembers": 2,
+    "createdAt": "2025-08-20T10:46:40.556Z",
+    "expiresAt": "2025-08-20T10:47:40.556Z"
+  },
+  "messages": [
+    {
+      "id": "188461e4-1498-4e87-95d9-4fbb0e410dd5",
+      "senderId": "3a1c3b63-5956-49a0-9316-a0d3cc695969",
+      "senderName": "Anon_3A1",
+      "senderColor": "#06b6d4",
+      "text": "hi",
+      "at": 1755686819565
+    },
+    {
+      "id": "936230eb-d4bb-49f1-8c3a-fadebf1c846a",
+      "senderId": "efcc24d1-f78b-4e4e-9acb-9468f056fd7a",
+      "senderName": "Anon_EFC",
+      "senderColor": "#06b6d4",
+      "text": "hi",
+      "at": 1755686824250
+    }
+  ]
+}

@@ -32,6 +32,28 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
     transform: translateY(-1px);
   }
+
+  .select-field {
+    @apply w-full p-4 rounded-xl text-white outline-none transition-all duration-300 cursor-pointer;
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.9));
+    border: 1px solid rgba(107, 114, 128, 0.3);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+  }
+
+  .select-field:focus {
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .select-field option {
+    color: #111827;
+    background: #ffffff;
+  }
   
   .btn-primary {
     @apply px-8 py-4 text-white font-semibold rounded-xl transition-all duration-300 transform relative overflow-hidden;

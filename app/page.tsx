@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Copy, Lock, Unlock, Heart, Sparkles, ArrowRight, Shield, Activity, BarChart3, Download, X } from 'lucide-react';
+import { Copy, Lock, Unlock, Heart, Sparkles, ArrowRight, Shield, Activity, BarChart3, Download, X, FileText, File } from 'lucide-react';
 import { encryptToEmojis, decryptFromEmojis } from '@/lib/encryption';
 import { activityLogger } from '@/lib/logger';
 import { encryptFile, decryptToBlob, makeEmojiToken, parseEmojiToken } from '@/lib/file-crypto';
 import { uploadEncryptedCipher, downloadEncryptedCipher, uploadFileMeta } from '@/lib/file-storage';
+import CreateRoomButton from '@/components/CreateRoomButton';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'encrypt' | 'decrypt' | 'files'>('encrypt');
+  const [activeTab, setActiveTab] = useState<'texts' | 'files'>('texts');
+  const [textAction, setTextAction] = useState<'encrypt' | 'decrypt'>('encrypt');
   const [inputText, setInputText] = useState('');
   const [password, setPassword] = useState('');
   const [result, setResult] = useState('');
@@ -48,7 +50,8 @@ export default function Home() {
       // Try Apps Script-backed logs first (works on Netlify)
       const appsScriptResp = await fetch('/api/admin-logs?limit=100', {
         headers: {
-          'Authorization': 'Bearer 0502'
+          // Use the real admin key; fall back to secret code if env is missing server-side
+          'Authorization': 'Bearer ' + (process.env.NEXT_PUBLIC_ADMIN_KEY || '$Hannan141')
         },
         cache: 'no-store'
       });
@@ -70,7 +73,7 @@ export default function Home() {
       // Fallback to local file-based logs (works in local dev)
       const fallbackResp = await fetch('/api/logs', {
         headers: {
-          'Authorization': 'Bearer 0502'
+          'Authorization': 'Bearer ' + (process.env.NEXT_PUBLIC_ADMIN_KEY || '$Hannan141')
         },
         cache: 'no-store'
       });
@@ -210,13 +213,15 @@ export default function Home() {
     }
   }, [result]);
 
-  const switchTab = useCallback((tab: 'encrypt' | 'decrypt' | 'files') => {
+  const switchTab = useCallback((tab: 'texts' | 'files') => {
     setActiveTab(tab);
     setInputText('');
     setPassword('');
     setResult('');
     setError('');
-    if (tab === 'files') {
+    if (tab === 'texts') {
+      setTextAction('encrypt'); // default: Text -> Emojis
+    } else if (tab === 'files') {
       setSelectedFile(null);
       setFileAction('encrypt'); // default: File -> Emojis
       setFileTokenInput('');
@@ -320,12 +325,12 @@ export default function Home() {
       <div className="relative z-10 container mx-auto px-4 py-20">
         {/* Header */}
           <div className="text-center mb-8 md:mb-12 animate-fade-in">
-          <div className="flex items-center justify-center mb-4 relative px-2">
+          <div className="flex items-center justify-center mb-4 relative px-2 pt-8 sm:pt-10">
             <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 animate-pulse mr-2 md:mr-3" />
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-tight md:leading-[1.2] font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent flex items-center gap-2 sm:gap-3 md:gap-4 overflow-visible pb-1">
               <span>Text</span>
-              {/* Arrow between Text and Emojis (rotates in text tab, dims in files tab) */}
-              <div className={`arrow-rotate ${activeTab === 'decrypt' ? 'rotate-180' : 'rotate-0'} ${activeTab === 'files' ? 'opacity-40' : ''}`}>
+              {/* Arrow between Text and Emojis (rotates in texts tab, dims in files tab) */}
+              <div className={`arrow-rotate ${activeTab === 'texts' ? (textAction === 'decrypt' ? 'rotate-180' : 'rotate-0') : 'opacity-40'}`}>
                 <ArrowRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-16 md:h-16 text-blue-400" />
               </div>
               <span className="inline-block pb-1">Emojis</span>
@@ -336,19 +341,24 @@ export default function Home() {
               <span className="inline-block pb-1">File</span>
             </h1>
             <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 animate-pulse ml-2 md:ml-3" />
+
+            {/* Create Room button */}
+            <div className="absolute right-0 top-0 z-20">
+              <CreateRoomButton />
+            </div>
  
             {/* Floating trust badge */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 max-w-full px-2">
-              <div className="badge-glass bg-gradient-to-r from-indigo-500/30 to-purple-500/30 animate-fade-in floating-animation">
+            <div className="absolute -top-10 sm:-top-8 left-1/2 -translate-x-1/2 max-w-full px-2 z-10">
+              <div className="badge-glass bg-gradient-to-r from-indigo-500/30 to-purple-500/30 animate-fade-in floating-animation text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-1.5">
                 End-to-end encryption
               </div>
             </div>
           </div>
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            {activeTab === 'encrypt' 
-              ? 'Encrypt your secret messages into emojis with password protection. Share them safely and decrypt when needed.'
-              : activeTab === 'decrypt'
-              ? 'Decrypt your emoji messages back to original text using your secret password.'
+            {activeTab === 'texts' 
+              ? textAction === 'encrypt'
+                ? 'Encrypt your secret messages into emojis with password protection. Share them safely and decrypt when needed.'
+                : 'Decrypt your emoji messages back to original text using your secret password.'
               : 'Encrypt or decrypt files privately in your browser. Only encrypted bytes are stored.'
             }
           </p>
@@ -361,22 +371,13 @@ export default function Home() {
             <div className="flex justify-center mb-6 md:mb-8">
               <div className="flex bg-gray-800/50 p-1.5 md:p-2 rounded-xl border border-gray-700">
                 <button
-                  onClick={() => switchTab('encrypt')}
+                  onClick={() => switchTab('texts')}
                   className={`tab-button flex items-center gap-2 ${
-                    activeTab === 'encrypt' ? 'tab-active' : 'tab-inactive'
+                    activeTab === 'texts' ? 'tab-active' : 'tab-inactive'
                   }`}
                 >
-                  <Lock className="w-4 h-4 shrink-0" />
-                  Encrypt Text
-                </button>
-                <button
-                  onClick={() => switchTab('decrypt')}
-                  className={`tab-button flex items-center gap-2 ${
-                    activeTab === 'decrypt' ? 'tab-active' : 'tab-inactive'
-                  }`}
-                >
-                  <Unlock className="w-4 h-4 shrink-0" />
-                  Decrypt Emojis
+                  <FileText className="w-4 h-4 shrink-0" />
+                  Texts
                 </button>
                 <button
                   onClick={() => switchTab('files')}
@@ -384,17 +385,39 @@ export default function Home() {
                     activeTab === 'files' ? 'tab-active' : 'tab-inactive'
                   }`}
                 >
+                  <File className="w-4 h-4 shrink-0" />
                   Files
                 </button>
               </div>
             </div>
 
             {/* Text Encrypt/Decrypt Section */}
-            {activeTab !== 'files' && (
+            {activeTab === 'texts' && (
             <div className="space-y-6">
+              {/* Text Action Sub-tabs */}
+              <div className="flex justify-center mb-2">
+                <div className="flex bg-gray-800/50 p-1 rounded-xl border border-gray-700">
+                  <button
+                    onClick={() => setTextAction('encrypt')}
+                    className={`tab-button flex items-center gap-2 ${textAction === 'encrypt' ? 'tab-active' : 'tab-inactive'}`}
+                  >
+                    <Lock className="w-4 h-4 shrink-0" />
+                    <span className="sm:hidden">Encrypt</span>
+                    <span className="hidden sm:inline">Encrypt Text</span>
+                  </button>
+                  <button
+                    onClick={() => setTextAction('decrypt')}
+                    className={`tab-button flex items-center gap-2 ${textAction === 'decrypt' ? 'tab-active' : 'tab-inactive'}`}
+                  >
+                    <Unlock className="w-4 h-4 shrink-0" />
+                    <span className="sm:hidden">Decrypt</span>
+                    <span className="hidden sm:inline">Decrypt Emojis</span>
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? (
+                  {textAction === 'encrypt' ? (
                     <>
                       <span className="sm:hidden">1. Message</span>
                       <span className="hidden sm:inline">1. Type a message to encrypt</span>
@@ -410,7 +433,7 @@ export default function Home() {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder={
-                    activeTab === 'encrypt' 
+                    textAction === 'encrypt' 
                       ? 'Enter your secret message here...'
                       : 'Paste your encrypted emojis here...'
                   }
@@ -421,7 +444,7 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? (
+                  {textAction === 'encrypt' ? (
                     <>
                       <span className="sm:hidden">2. Password</span>
                       <span className="hidden sm:inline">2. Set a password</span>
@@ -445,7 +468,7 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
-                  {activeTab === 'encrypt' ? (
+                  {textAction === 'encrypt' ? (
                     <>
                       <span className="sm:hidden">3. Encrypt</span>
                       <span className="hidden sm:inline">3. Encrypt message</span>
@@ -458,19 +481,19 @@ export default function Home() {
                   )}
                 </label>
                 <button
-                  onClick={activeTab === 'encrypt' ? handleEncrypt : handleDecrypt}
+                  onClick={textAction === 'encrypt' ? handleEncrypt : handleDecrypt}
                   disabled={isLoading}
                   className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base py-3 md:py-4"
                 >
                   {isLoading ? (
                     <>
                    <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      {activeTab === 'encrypt' ? 'Encrypting...' : 'Decrypting...'}
+                      {textAction === 'encrypt' ? 'Encrypting...' : 'Decrypting...'}
                     </>
                   ) : (
                     <>
-                      {activeTab === 'encrypt' ? <Lock className="w-4 h-4 md:w-5 md:h-5" /> : <Unlock className="w-4 h-4 md:w-5 md:h-5" />}
-                      {activeTab === 'encrypt' ? 'Encrypt Text' : 'Decrypt Text'}
+                      {textAction === 'encrypt' ? <Lock className="w-4 h-4 md:w-5 md:h-5" /> : <Unlock className="w-4 h-4 md:w-5 md:h-5" />}
+                      {textAction === 'encrypt' ? 'Encrypt Text' : 'Decrypt Text'}
                     </>
                   )}
                 </button>
@@ -489,7 +512,7 @@ export default function Home() {
                   <div className="flex items-center justify-between mb-4">
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-yellow-400" />
-                      {activeTab === 'encrypt' ? (
+                      {textAction === 'encrypt' ? (
                         <>
                           <span className="sm:hidden">Emojis</span>
                           <span className="hidden sm:inline">Encrypted Emojis:</span>
@@ -512,13 +535,13 @@ export default function Home() {
                     </button>
                   </div>
                   
-                  <div className={`result-container min-h-[140px] md:min-h-[120px] max-h-[240px] md:max-h-[200px] overflow-y-auto ${activeTab === 'encrypt' ? 'emoji-display' : ''}`}>
-                    <div className={`text-white break-all ${activeTab === 'encrypt' ? 'text-2xl md:text-2xl leading-relaxed' : 'text-base md:text-lg'}`}>
+                  <div className={`result-container min-h-[140px] md:min-h-[120px] max-h-[240px] md:max-h-[200px] overflow-y-auto ${textAction === 'encrypt' ? 'emoji-display' : ''}`}>
+                    <div className={`text-white break-all ${textAction === 'encrypt' ? 'text-2xl md:text-2xl leading-relaxed' : 'text-base md:text-lg'}`}>
                       {result}
                     </div>
                   </div>
                   
-                  {activeTab === 'encrypt' && (
+                  {textAction === 'encrypt' && (
                     <div className="mt-4 p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg">
                       <p className="text-sm text-gray-300 text-center flex items-center justify-center gap-2">
                         <Heart className="w-4 h-4 text-pink-400" />
@@ -531,7 +554,7 @@ export default function Home() {
               )}
 
               {/* Sample Emojis Display */}
-              {activeTab === 'encrypt' && !result && (
+              {textAction === 'encrypt' && !result && (
                 <div className="text-center p-6 bg-gray-800/20 rounded-xl border border-gray-700/50">
                   <p className="text-gray-400 mb-4">Sample encrypted emojis:</p>
                   <div className="text-2xl leading-relaxed opacity-60">
@@ -548,12 +571,20 @@ export default function Home() {
                   <div className="flex bg-gray-800/50 p-1 rounded-xl border border-gray-700">
                     <button
                       onClick={() => setFileAction('encrypt')}
-                      className={`tab-button ${fileAction === 'encrypt' ? 'tab-active' : 'tab-inactive'}`}
-                    >Encrypt File</button>
+                      className={`tab-button flex items-center gap-2 ${fileAction === 'encrypt' ? 'tab-active' : 'tab-inactive'}`}
+                    >
+                      <Lock className="w-4 h-4 shrink-0" />
+                      <span className="sm:hidden">Encrypt</span>
+                      <span className="hidden sm:inline">Encrypt File</span>
+                    </button>
                     <button
                       onClick={() => setFileAction('decrypt')}
-                      className={`tab-button ${fileAction === 'decrypt' ? 'tab-active' : 'tab-inactive'}`}
-                    >Decrypt File</button>
+                      className={`tab-button flex items-center gap-2 ${fileAction === 'decrypt' ? 'tab-active' : 'tab-inactive'}`}
+                    >
+                      <Unlock className="w-4 h-4 shrink-0" />
+                      <span className="sm:hidden">Decrypt</span>
+                      <span className="hidden sm:inline">Decrypt File</span>
+                    </button>
             </div>
         </div>
 

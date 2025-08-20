@@ -101,6 +101,21 @@ export function mapEmojisToBase64(emojis: string): string {
   return result;
 }
 
+// --- Raw AES helpers for text (used by compact token flow) ---
+export function encryptTextToBase64(text: string, password: string): string {
+  const base64Text = btoa(unescape(encodeURIComponent(text)));
+  return CryptoJS.AES.encrypt(base64Text, password).toString();
+}
+
+export function decryptBase64ToText(encryptedBase64: string, password: string): string {
+  const decryptedBytes = CryptoJS.AES.decrypt(encryptedBase64, password);
+  const decryptedBase64 = decryptedBytes.toString(CryptoJS.enc.Utf8);
+  if (!decryptedBase64) {
+    throw new Error('Decryption failed. Please check your password.');
+  }
+  return decodeURIComponent(escape(atob(decryptedBase64)));
+}
+
 /**
  * Encrypts text using password and converts to emojis
  * Based on txtmoji.com approach - simple and reliable

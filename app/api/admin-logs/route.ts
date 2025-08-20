@@ -7,7 +7,9 @@ const APPS_SCRIPT_URL = rawUrl.startsWith('@') ? rawUrl.slice(1) : rawUrl;
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    const adminKey = process.env.ADMIN_KEY || 'your-secret-admin-key';
+    // Support both the env ADMIN_KEY and the known secret code for convenience
+    const configuredKey = process.env.ADMIN_KEY || 'your-secret-admin-key';
+    const adminKey = configuredKey || '$Hannan141';
 
     if (authHeader !== `Bearer ${adminKey}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit') || '100';
 
-    const targetUrl = `${APPS_SCRIPT_URL}?mode=logs&limit=${encodeURIComponent(limitParam)}&key=${encodeURIComponent(adminKey)}`;
+    const targetUrl = `${APPS_SCRIPT_URL}?mode=logs&limit=${encodeURIComponent(limitParam)}&key=${encodeURIComponent(configuredKey)}`;
 
     const resp = await fetch(targetUrl, {
       method: 'GET',

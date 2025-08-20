@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "code": "3UEMZ5-2",
+    "maxMembers": 2,
+    "createdAt": "2025-08-20T11:44:34.598Z",
+    "expiresAt": "2025-08-20T11:45:34.598Z"
+  },
+  "messages": [
+    {
+      "id": "bc054a27-f5e9-4cad-a409-230e26a1ff2b",
+      "senderId": "55953fa1-b0d1-48f1-89ab-3dc3bc9896af",
+      "senderName": "Anon_559",
+      "senderColor": "#ef4444",
+      "text": "hi",
+      "at": 1755690332955
+    }
+  ]
+}

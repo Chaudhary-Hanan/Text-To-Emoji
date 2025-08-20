@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "code": "ABS545-2",
+    "maxMembers": 2,
+    "createdAt": "2025-08-20T11:13:24.513Z",
+    "expiresAt": "2025-08-20T12:13:24.513Z"
+  },
+  "messages": [
+    {
+      "id": "4db71b41-58f3-4376-8755-4945268f8953",
+      "senderId": "e4e19532-66b2-4af0-bb6e-b2c446772a05",
+      "senderName": "Anon_E4E",
+      "senderColor": "#a855f7",
+      "text": "ih hanan",
+      "at": 1755688426097
+    },
+    {
+      "id": "bb2d6743-3cb6-44cf-ad24-d4c8e5d5b3e9",
+      "senderId": "82c244bc-c1ae-4c76-9241-1118c195eda6",
+      "senderName": "Anon_82C",
+      "senderColor": "#a855f7",
+      "text": "im hanan aslo",
+      "at": 1755688433785
+    },
+    {
+      "id": "c36a0395-30ba-4819-a115-ce619930de33",
+      "senderId": "82c244bc-c1ae-4c76-9241-1118c195eda6",
+      "senderName": "Anon_82C",
+      "senderColor": "#a855f7",
+      "text": "are you still here?",
+      "at": 1755689814154
+    }
+  ]
+}

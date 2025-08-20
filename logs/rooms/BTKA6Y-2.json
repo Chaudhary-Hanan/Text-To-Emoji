@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "code": "BTKA6Y-2",
+    "maxMembers": 2,
+    "createdAt": "2025-08-20T11:33:09.947Z",
+    "expiresAt": "2025-08-20T11:38:09.947Z"
+  },
+  "messages": [
+    {
+      "id": "63322da9-1ec5-4a9f-a26a-e089d34a3cbb",
+      "senderId": "fc5a20a1-7cf8-4f5d-8343-0601c7849f7e",
+      "senderName": "Anon_FC5",
+      "senderColor": "#06b6d4",
+      "text": "hi",
+      "at": 1755689613594
+    },
+    {
+      "id": "c757f541-3e2b-4a6c-8358-58b142f0cc35",
+      "senderId": "fc5a20a1-7cf8-4f5d-8343-0601c7849f7e",
+      "senderName": "Anon_FC5",
+      "senderColor": "#06b6d4",
+      "text": "how are you",
+      "at": 1755689621701
+    },
+    {
+      "id": "d7d42378-002e-49de-b912-e1cafc021004",
+      "senderId": "fc5a20a1-7cf8-4f5d-8343-0601c7849f7e",
+      "senderName": "Anon_FC5",
+      "senderColor": "#06b6d4",
+      "text": "hiii",
+      "at": 1755689827106
+    },
+    {
+      "id": "56342855-a097-499c-9b4b-e9005be259c9",
+      "senderId": "869f2dfd-3e33-4893-b0a8-2551e9ba59ad",
+      "senderName": "Anon_869",
+      "senderColor": "#10b981",
+      "text": "hi",
+      "at": 1755689845286
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "code": "8FG9BA-2",
+    "maxMembers": 2,
+    "createdAt": "2025-08-20T10:27:58.643Z",
+    "expiresAt": "2025-08-20T10:30:58.643Z"
+  },
+  "messages": [
+    {
+      "id": "885b21f3-853c-4635-9df4-923c30c09a1f",
+      "senderId": "789640fd-72ba-4c26-bb99-6ca1dfef2dcc",
+      "senderName": "Anon_789",
+      "senderColor": "#a855f7",
+      "text": "hi",
+      "at": 1755685694004
+    },
+    {
+      "id": "70659d59-cd43-4af2-ab48-4312e8ad7a71",
+      "senderId": "e823824f-7458-42f6-9ce9-43557da1633a",
+      "senderName": "Anon_E82",
+      "senderColor": "#10b981",
+      "text": "hi",
+      "at": 1755685698132
+    }
+  ]
+}
